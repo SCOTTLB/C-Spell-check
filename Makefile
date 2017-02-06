@@ -5,8 +5,8 @@
 ####																		####
 
 
-all: main.c
-	gcc -c main.c -o main.o
-	gcc main.o -o out
-	./out
+all: spell.c
+	gcc -c spell.c -o spell.o
+	gcc spell.o -o spell
 	rm *.o
+	./spell
