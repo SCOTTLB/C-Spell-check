@@ -8,7 +8,7 @@
 #include <stdlib.h>
 
 
-int readFile(int **data, char filename){
+int readFile(char **data, const char *filename){
 
   // Create a pointer to a file
   FILE *file;
@@ -16,15 +16,32 @@ int readFile(int **data, char filename){
   // Read the file using the name provided
   file = fopen(filename, "r");
 
+  int size;
 
- return 0;
+  fread(&size, sizeof(char), 1, file);
+
+  *data = (char*)malloc(sizeof(char) * size);
+
+  fread(*data, sizeof(char), size, file);
+
+  printf("%s\n", *data);
+
+ return size;
 }
 
 
 int main(int argc, char const *argv[]) {
 
   // TODO: Arg handling
-  // TODO:
+  // TODO: The rest
+
+  char *data;
+
+  char filename[] = "dictionary.txt";
+
+  int size = readFile(&data, filename);
+
+
 
   return 0;
 }
