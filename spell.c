@@ -25,9 +25,18 @@ int readFile(char **data, const char *filename){
   // Allocate the appropriate amount of mem
   *data = (char*)malloc(sizeof(char) * size);
 
+  // Determine the number of lines in the file
+  int numberOfLines, cha = 0;
+
+
+  printf("There are: %d lines\n", numberOfLines );
+
+
   // Read the strings from the file; long*2 is needed to read the whole file,
   // long long just didnt cut it...
   fread(*data, sizeof(long)*2, size, file);
+
+  printf("%s\n", *data);
 
   // return the size of the list
  return size;
@@ -37,6 +46,11 @@ int readFile(char **data, const char *filename){
 int main(int argc, char const *argv[]) {
 
   // TODO: Arg handling
+
+  
+
+
+
   // TODO: The rest
 
   char *data;
@@ -45,9 +59,9 @@ int main(int argc, char const *argv[]) {
 
   int size = readFile(&data, filename);
 
-  printf("%d\n", size);
+  //printf("%d\n", size);
 
-  printf("%s\n", data);
+  //printf("%s\n", data);
 
   return 0;
 }
