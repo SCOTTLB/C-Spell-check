@@ -6,62 +6,123 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 
-int readFile(char **data, const char *filename){
+int lineNumber(char* fileName){
 
-  // Create a pointer to a file
-  FILE *file;
+  // Open the file with the given filename
+  FILE *fp = fopen(fileName, "r");
 
-  // Read the file using the name provided
-  file = fopen(filename, "r");
+  // If the file failes to open then error and return
+  if(fp == NULL){
+    printf("No file!\n");
+    return 0;
+  }
 
-  // Get the size of the file
-  int size;
+  // Characters and lines
+  int ch, lines = 0;
 
-  // Read the file to determine the size
-  fread(&size, sizeof(char), 1, file);
+  // While its not the end of the file
+  while(!feof(fp)){
+    // get the char
+    ch = fgetc(fp);
+    // if the char is a new line char
+    if(ch == '\n'){
+      // add one to the line counter
+      lines++;
+    }
+  }
+  fclose(fp);
+  // return the size of the file
+  return lines;
+}
 
-  // Allocate the appropriate amount of mem
-  *data = (char*)malloc(sizeof(char) * size);
+void CLIhelper(){
+  // This func shows the help page
+  printf("\nSpell Check Tool - Scott Bean\nUsage:\n\tspell [options]\n\nOptions\n-i <file>\t\tThe file to spell check\n-o <file>\t\tThe file to write misspelt words to\n-c\t\t\tIgnore case of words\n");
 
-  // Determine the number of lines in the file
-  int numberOfLines, cha = 0;
+}
+
+int argumentHandler(int argc, char const *argv[]){
 
 
-  printf("There are: %d lines\n", numberOfLines );
+  // If only one argument is passsed then fail and display help
+  if(argc < 2){
+    printf("Not enough arguments\n");
+    CLIhelper();
+    return 1;
+  }
+
+  // Loop through argv
+  for(int i = 0; i < argc; i++){
 
 
-  // Read the strings from the file; long*2 is needed to read the whole file,
-  // long long just didnt cut it...
-  fread(*data, sizeof(long)*2, size, file);
+    printf("\nArg: %s\n", argv[i]);
+    // Help flag
+    if(strcmp(argv[i], "-h") == 0){
+      printf("Help arg found!\n");
+      //CLIhelper();
+    }
 
-  printf("%s\n", *data);
+    // Input Flag
+    if(strcmp(argv[i], "-i") == 0){
 
-  // return the size of the list
- return size;
+      printf("Input arg found!\n");
+      IN_FLAG = 1;
+    }
+
+    // Output flag
+    if(strcmp(argv[i], "-o") == 0){
+
+      printf("Output arg found!\n");
+      OUT_FLAG = 1;
+    }
+
+    // Case flag
+    if(strcmp(argv[i], "-c") == 0){
+
+      printf("Case arg found!\n");
+    }
+    //printf("%s\n", argv[i]);
+
+  }
+
+  return IN_FLAG;
+}
+
+char** fileHandler(int size, char* filename){
+
+  FILE *fp = fopen(filename, "r");
+
+  char** dictionary = (char**)malloc(size * sizeof(char*));
+
+  for(int i = 0; i < size; i++){
+
+    char wordBuff[50];
+
+    dictionary[i] = (char*)malloc(sizeof(char));
+
+    fgets(wordBuff, 50, fp);
+
+    strcpy(dictionary[i], wordBuff);
+
+  }
+
+  return dictionary;
 }
 
 
 int main(int argc, char const *argv[]) {
 
-  // TODO: Arg handling
+  char fileName[] = "dictionary.txt";
 
-  
+  int size  = lineNumber(fileName);
 
+  char** dictionary = fileHandler(size, fileName);
 
-
-  // TODO: The rest
-
-  char *data;
-
-  char filename[] = "dictionary.txt";
-
-  int size = readFile(&data, filename);
-
-  //printf("%d\n", size);
-
-  //printf("%s\n", data);
+  printf("Lines: %d\n", size);
 
   return 0;
+
 }
