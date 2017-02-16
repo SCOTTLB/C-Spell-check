@@ -9,4 +9,9 @@ all: spell.c
 	gcc -c spell.c -o spell.o
 	gcc spell.o -o spell
 	rm *.o
-	./spell
+	./spell -i -o
+
+
+clean:
+	rm *.o
+	rm spell

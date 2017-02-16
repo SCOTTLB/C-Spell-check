@@ -4,6 +4,10 @@
  // Coursework 1                //
 /////////////////////////////////
 
+// TODO: Remeber to close failes
+
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,55 +44,8 @@ int lineNumber(char* fileName){
 
 void CLIhelper(){
   // This func shows the help page
-  printf("\nSpell Check Tool - Scott Bean\nUsage:\n\tspell [options]\n\nOptions\n-i <file>\t\tThe file to spell check\n-o <file>\t\tThe file to write misspelt words to\n-c\t\t\tIgnore case of words\n");
+  printf("\nSpell Check Tool - Scott Bean\nUsage:\n\tspell [options]\nExample:\n\tspell -i input_file.txt -o output_file.txt\n\nOptions\n-i <file>\t\tThe file to spell check\n-o <file>\t\tThe file to write misspelt words to\n-c\t\t\tIgnore case of words\n");
 
-}
-
-int argumentHandler(int argc, char const *argv[]){
-
-
-  // If only one argument is passsed then fail and display help
-  if(argc < 2){
-    printf("Not enough arguments\n");
-    CLIhelper();
-    return 1;
-  }
-
-  // Loop through argv
-  for(int i = 0; i < argc; i++){
-
-
-    printf("\nArg: %s\n", argv[i]);
-    // Help flag
-    if(strcmp(argv[i], "-h") == 0){
-      printf("Help arg found!\n");
-      //CLIhelper();
-    }
-
-    // Input Flag
-    if(strcmp(argv[i], "-i") == 0){
-
-      printf("Input arg found!\n");
-      IN_FLAG = 1;
-    }
-
-    // Output flag
-    if(strcmp(argv[i], "-o") == 0){
-
-      printf("Output arg found!\n");
-      OUT_FLAG = 1;
-    }
-
-    // Case flag
-    if(strcmp(argv[i], "-c") == 0){
-
-      printf("Case arg found!\n");
-    }
-    //printf("%s\n", argv[i]);
-
-  }
-
-  return IN_FLAG;
 }
 
 char** fileHandler(int size, char* filename){
@@ -112,17 +69,69 @@ char** fileHandler(int size, char* filename){
   return dictionary;
 }
 
+int main(int argc, char *argv[]) {
 
-int main(int argc, char const *argv[]) {
+  // Flags
+  int input_file, output_file, case_sensitive = 0;
 
-  char fileName[] = "dictionary.txt";
+  // Hold the filename
+  char* fileName = "";
 
-  int size  = lineNumber(fileName);
+  // Handle arguments
+  for(int i = 0; i < argc; i ++){
 
-  char** dictionary = fileHandler(size, fileName);
+    // Input flag
+    if(strcmp(argv[i], "-i") == 0 ){
 
-  printf("Lines: %d\n", size);
+      printf("Input arg\n");
+      // Set flag
+      input_file = 1;
+
+      // Check filename (arg + 1) contains '.txt', if so set the filename otherwise display an error
+      if(strstr(argv[i+1], ".txt") != NULL){
+
+        fileName = argv[i+1];
+
+      }else{
+
+        printf("Invalid filename\n\n");
+        CLIhelper();
+        exit(1);
+
+      }
+    }
+
+    if(strcmp(argv[i], "-o") == 0 ){
+
+      printf("Out arg\n");
+      output_file = 1;
+    }
+
+    if(strcmp(argv[i], "-h") == 0 ){
+
+      printf("Help arg\n");
+      CLIhelper();
+    }
+
+    if(strcmp(argv[i], "-c") == 0){
+
+      printf("Case arg\n");
+      case_sensitive = 1;
+    }
+  }
+
+  if(fileName){
+    int size  = lineNumber(fileName);
+
+    char** dictionary = fileHandler(size, fileName);
+    printf("File: %s: Lines: %d\n",fileName, size);
+
+  }else{
+
+    printf("No file, using standard in\n");
+
+  }
+
 
   return 0;
-
 }
