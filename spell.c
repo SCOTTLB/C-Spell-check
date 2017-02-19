@@ -4,13 +4,12 @@
  // Coursework 1                //
 /////////////////////////////////
 
-// TODO: Remeber to close failes
-
-
+#define DicFileName "dictionary.txt"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 
 int lineNumber(char* fileName){
@@ -37,6 +36,7 @@ int lineNumber(char* fileName){
       lines++;
     }
   }
+  // close the file
   fclose(fp);
   // return the size of the file
   return lines;
@@ -48,34 +48,209 @@ void CLIhelper(){
 
 }
 
-char** fileHandler(int size, char* filename){
+char** fileHandlerIn(char* filename, int* inputSize){
 
+  // open file in read mode
   FILE *fp = fopen(filename, "r");
 
-  char** dictionary = (char**)malloc(size * sizeof(char*));
+  // first level of validation
+  if(fp != NULL){
 
-  for(int i = 0; i < size; i++){
+    // Check filename (arg + 1) contains '.txt', if so set the filename otherwise display an error
+    if(strstr(filename, ".txt") != NULL){
 
-    char wordBuff[50];
+      /*
+      TODO:
+         this section only works with a word on each line,
+         need some form of ifElse block to check if sentence or not
+      */
 
-    dictionary[i] = (char*)malloc(sizeof(char));
+      int size = lineNumber(filename);
 
-    fgets(wordBuff, 50, fp);
+      *inputSize = size;
 
-    strcpy(dictionary[i], wordBuff);
+      // allocate a block of memory using the number of lines * the size of a char*
+      char** dictionary = (char**)malloc(size * sizeof(char*));
 
+      // for each line in the file
+      for(int i = 0; i < size; i++){
+
+        // have a buffer to hold each word
+        char wordBuff[50];
+
+        // allocate a block of memory within each index of the char**
+        dictionary[i] = (char*)malloc(sizeof(char));
+
+        // get the word from the file and put it into buffer
+        fgets(wordBuff, 50, fp);
+
+        // get the sting lenth
+        int len =  strlen(wordBuff);
+
+        // if it ends witn a new line, remove it and add null terminator
+        if(len > 0 && wordBuff[len - 1] == '\n'){
+
+          wordBuff[len - 1] = '\0';
+
+        }
+
+        // copy from the buffer into the dictionary
+        strcpy(dictionary[i], wordBuff);
+
+      }
+      // close the file
+      fclose(fp);
+      printf("File: %s loaded!\n", filename);
+      return dictionary;
+
+    }
+
+
+  }else{ /* If input_file is invalid */
+
+    printf("Invalid filename\n\n");
+    // Help page
+    CLIhelper();
+    // exit the prog
+    exit(1);
   }
 
-  return dictionary;
+  return NULL;
 }
+
+char** standardIN(int* inputSize){
+
+  // buffer to hold the lines
+  char str[1000];
+
+  printf("USING CONSOLE INPUT> ");
+
+  // get the line from stdin
+  fgets(str, 1000, stdin);
+
+  // declare vars to hold everything
+  const char delimiter[2] = " ";
+  char* token;
+
+  int counter = 0;
+
+  // allocate memory
+  char** inputContent = (char**)malloc(sizeof(char*) * strlen(str));
+
+  // loop through each token untill we reach the end
+  for(token = strtok(str, delimiter); token != NULL; token = strtok(NULL, delimiter)){
+
+    // allocate mem for the token
+    inputContent[counter] = malloc(strlen(token) + 1);
+
+    // get the sting lenth
+    int len =  strlen(token);
+
+    // if it ends witn a new line, remove it and add null terminator
+    if(len > 0 && token[len - 1] == '\n'){
+
+      token[len - 1] = '\0';
+
+    }
+
+    // copy from token to the content array
+    strcpy(inputContent[counter], token);
+
+    counter++;
+
+    char** temp = (char**)realloc(inputContent, sizeof(inputContent) * sizeof(char*));
+
+    // check for successfull mem allocation
+    if(temp != NULL){
+      // if no error set pointer to temp
+        inputContent = temp;
+
+    }else{
+      // free temp
+      free(temp);
+
+      // error and quit
+      printf("Error allocating memory\n");
+      exit(1);
+
+    }
+  }
+  *inputSize = counter;
+  return inputContent;
+
+}
+
+void binarySearch(char** values, int low, int high, char* value){
+/*
+  values = array of values to search from
+  n = length of values
+  value =  the value to search for
+*/
+
+    // set bounds
+    int min = low;
+    int max = high;
+
+    int mid = max/2;
+
+    printf("%d:%d:%d\n",min,mid,max );
+    // comparison
+    int comp = strcmp(value, values[mid]);
+
+    // if the key is in the lower half of the array
+    if(comp < 0){
+      printf("Lower\n");
+      max = mid;
+      mid = max/2;
+
+      binarySearch(values, min,max, value);
+
+    }else if/* if the key is in the higher half of the list*/(comp > 0){
+      printf("Higher\n");
+      min = mid;
+      mid = max/2;
+
+
+      binarySearch(values, min, max, value);
+    }else if /* if the keys match */(comp == 0){
+
+      printf("Keys match\n");
+    }
+
+
+
+
+
+}
+
+void spellcheck(char** dictionary, char** inputDic, int inputSize){
+
+  // Get the size of the dictionary
+  int dictionarySize = lineNumber(DicFileName);
+
+
+  for(int i = 0; i < inputSize; i++){
+
+    binarySearch(dictionary, 0, dictionarySize, inputDic[i]);
+  }
+}
+
+// MAIN //
 
 int main(int argc, char *argv[]) {
 
-  // Flags
-  int input_file, output_file, case_sensitive = 0;
-
   // Hold the filename
-  char* fileName = "";
+  char* input_file = "";
+  char* output_file = "";
+
+  // initalise var
+  char** inputDic = NULL;
+  // inputSize is a int pointer that gets set to the numer of lines in the inputDic array
+  int inputSize;
+
+
+  // load the dictionary data
+  char** dictionary = fileHandlerIn(DicFileName, &inputSize);
 
   // Handle arguments
   for(int i = 0; i < argc; i ++){
@@ -83,28 +258,29 @@ int main(int argc, char *argv[]) {
     // Input flag
     if(strcmp(argv[i], "-i") == 0 ){
 
-      printf("Input arg\n");
-      // Set flag
-      input_file = 1;
+      // Get the filename
+      input_file = argv[i+1];
+      // pass the file to fileHandlerIn
+      inputDic = fileHandlerIn(input_file, &inputSize);
 
-      // Check filename (arg + 1) contains '.txt', if so set the filename otherwise display an error
-      if(strstr(argv[i+1], ".txt") != NULL){
-
-        fileName = argv[i+1];
-
-      }else{
-
-        printf("Invalid filename\n\n");
-        CLIhelper();
-        exit(1);
-
-      }
     }
 
     if(strcmp(argv[i], "-o") == 0 ){
 
       printf("Out arg\n");
-      output_file = 1;
+
+      if (strstr(argv[i + 1], ".txt") != NULL){
+
+        output_file = argv[i + 1];
+
+      }else{
+
+        printf("Invalid output file\n");\
+        CLIhelper();
+        exit(1);
+
+      }
+
     }
 
     if(strcmp(argv[i], "-h") == 0 ){
@@ -116,21 +292,25 @@ int main(int argc, char *argv[]) {
     if(strcmp(argv[i], "-c") == 0){
 
       printf("Case arg\n");
-      case_sensitive = 1;
     }
   }
 
-  if(fileName){
-    int size  = lineNumber(fileName);
 
-    char** dictionary = fileHandler(size, fileName);
-    printf("File: %s: Lines: %d\n",fileName, size);
+  // if there is a input file
+  if(strcmp(input_file, "")){
+    // get the size
+    int size  = lineNumber(input_file);
+
+    printf("File: %s: Lines: %d\n",input_file, size);
 
   }else{
 
-    printf("No file, using standard in\n");
+    // GET FROM STD IN
+    inputDic = standardIN(&inputSize);
 
   }
+
+  spellcheck(dictionary, inputDic, inputSize);
 
 
   return 0;
