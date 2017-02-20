@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 
 int lineNumber(char* fileName){
@@ -44,7 +45,7 @@ int lineNumber(char* fileName){
 
 void CLIhelper(){
   // This func shows the help page
-  printf("\nSpell Check Tool - Scott Bean\nUsage:\n\tspell [options]\nExample:\n\tspell -i input_file.txt -o output_file.txt\n\nOptions\n-i <file>\t\tThe file to spell check\n-o <file>\t\tThe file to write misspelt words to\n-c\t\t\tIgnore case of words\n");
+  printf("\nSpell Check Tool - Scott Bean\nUsage:\n\tspell [options]\nExample:\n\tspell -i input_file.txt -o output_file.txt\n\nOptions:\n\t-i <file>\t\tThe file to spell check\n\t-o <file>\t\tThe file to write misspelt words to\n\t-c\t\t\tIgnore case of words\n\n");
 
 }
 
@@ -180,64 +181,76 @@ char** standardIN(int* inputSize){
 
 }
 
-void binarySearch(char** values, int low, int high, char* value){
-/*
-  values = array of values to search from
-  n = length of values
-  value =  the value to search for
-*/
+void binarySearch(char** values, int low, int middle, int high, char* value, int case_flag){
+
+  /*
+    values = array of values to search from
+    n = length of values
+    value =  the value to search for
+  */
 
     // set bounds
     int min = low;
     int max = high;
+    int mid = middle;
 
-    int mid = max/2;
-
-    printf("%d:%d:%d\n",min,mid,max );
-    // comparison
     int comp = strcmp(value, values[mid]);
-
+    
     // if the key is in the lower half of the array
     if(comp < 0){
-      printf("Lower\n");
-      max = mid;
-      mid = max/2;
 
-      binarySearch(values, min,max, value);
+      max = mid;
+      mid = (min + max) / 2;
+
+      if(min == mid || mid == max){
+
+        printf("%s is not in the dictionary\n", value);
+      }else{
+        binarySearch(values, min, mid,max, value, case_flag);
+      }
+
 
     }else if/* if the key is in the higher half of the list*/(comp > 0){
-      printf("Higher\n");
+
       min = mid;
-      mid = max/2;
+      mid = (min + max) / 2;
 
+      if(min == mid || mid == max){
 
-      binarySearch(values, min, max, value);
+        printf("%s is not in the dictionary\n", value);
+      }else{
+        binarySearch(values, min, mid,max, value, case_flag);
+      }
+
     }else if /* if the keys match */(comp == 0){
 
-      printf("Keys match\n");
+      printf("FOUND %s!\n", value);
+
     }
-
-
-
-
 
 }
 
-void spellcheck(char** dictionary, char** inputDic, int inputSize){
+void spellcheck(char** dictionary, char** inputDic, int inputSize, int case_flag){
 
   // Get the size of the dictionary
   int dictionarySize = lineNumber(DicFileName);
 
+  if(case_flag){
+    printf("\n\n##############################\n# This file will ignore case #\n##############################\n\n");
+  }
 
   for(int i = 0; i < inputSize; i++){
 
-    binarySearch(dictionary, 0, dictionarySize, inputDic[i]);
+    binarySearch(dictionary, 0, dictionarySize/2, dictionarySize, inputDic[i], case_flag);
   }
 }
 
 // MAIN //
 
 int main(int argc, char *argv[]) {
+
+  // case sensitivity flag
+  int case_flag = 0;
 
   // Hold the filename
   char* input_file = "";
@@ -290,8 +303,7 @@ int main(int argc, char *argv[]) {
     }
 
     if(strcmp(argv[i], "-c") == 0){
-
-      printf("Case arg\n");
+      case_flag = 1;
     }
   }
 
@@ -310,7 +322,7 @@ int main(int argc, char *argv[]) {
 
   }
 
-  spellcheck(dictionary, inputDic, inputSize);
+  spellcheck(dictionary, inputDic, inputSize, case_flag);
 
 
   return 0;
