@@ -181,6 +181,13 @@ char** standardIN(int* inputSize){
 
 }
 
+void fileHandlerOut(){
+
+
+
+}
+
+
 void binarySearch(char** values, int low, int middle, int high, char* value, int case_flag){
 
   /*
@@ -195,7 +202,7 @@ void binarySearch(char** values, int low, int middle, int high, char* value, int
     int mid = middle;
 
     int comp = strcmp(value, values[mid]);
-    
+
     // if the key is in the lower half of the array
     if(comp < 0){
 
@@ -205,7 +212,9 @@ void binarySearch(char** values, int low, int middle, int high, char* value, int
       if(min == mid || mid == max){
 
         printf("%s is not in the dictionary\n", value);
+
       }else{
+
         binarySearch(values, min, mid,max, value, case_flag);
       }
 
@@ -219,15 +228,14 @@ void binarySearch(char** values, int low, int middle, int high, char* value, int
 
         printf("%s is not in the dictionary\n", value);
       }else{
+
         binarySearch(values, min, mid,max, value, case_flag);
       }
 
     }else if /* if the keys match */(comp == 0){
 
-      printf("FOUND %s!\n", value);
-
+      printf("FOUND: %s\n", value);
     }
-
 }
 
 void spellcheck(char** dictionary, char** inputDic, int inputSize, int case_flag){
