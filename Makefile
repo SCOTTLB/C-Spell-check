@@ -10,7 +10,7 @@ all: spell.c
 	gcc -c spell.c -o spell.o
 	gcc spell.o -o spell
 	rm *.o
-	./spell -i single_words_test.txt
+	./spell -c
 
 
 clean:

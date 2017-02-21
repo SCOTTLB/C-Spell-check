@@ -4,7 +4,7 @@
  // Coursework 1                //
 /////////////////////////////////
 
-#define DicFileName "dictionary.txt"
+#define DICTIONARY_FILE_NAME "dictionary.txt"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -181,14 +181,7 @@ char** standardIN(int* inputSize){
 
 }
 
-void fileHandlerOut(){
-
-
-
-}
-
-
-void binarySearch(char** values, int low, int middle, int high, char* value, int case_flag){
+int binarySearch(char** values, int low, int middle, int high, char* value, int case_flag){
 
   /*
     values = array of values to search from
@@ -201,55 +194,86 @@ void binarySearch(char** values, int low, int middle, int high, char* value, int
     int max = high;
     int mid = middle;
 
+    // check if the case flag is raised
+    if(case_flag){
+
+      // loop through the word, convert each char to lower case
+      for(int i = 0; value[i]; i++){
+
+        value[i] = tolower(value[i]);
+
+      }
+
+      for(int j = 0; values[mid][j]; j++){
+
+        values[mid][j] = tolower(values[mid][j]);
+      }
+
+      printf("value:%s values:%s\n", value, values[mid]);
+    }
+
+    // set up the comparison
     int comp = strcmp(value, values[mid]);
 
     // if the key is in the lower half of the array
     if(comp < 0){
 
+      // set new bounds
       max = mid;
       mid = (min + max) / 2;
 
+      // if we have split the list untill the end
       if(min == mid || mid == max){
 
-        printf("%s is not in the dictionary\n", value);
+          printf("%s is not in the dictionary\n", value);
 
       }else{
-
+        // continue search
         binarySearch(values, min, mid,max, value, case_flag);
       }
 
 
     }else if/* if the key is in the higher half of the list*/(comp > 0){
 
+      // set new bounds
       min = mid;
       mid = (min + max) / 2;
 
+      // if we have split the list untill the end
       if(min == mid || mid == max){
 
-        printf("%s is not in the dictionary\n", value);
-      }else{
+          printf("%s is not in the dictionary\n", value);
 
+
+      }else{
+        // continue search
         binarySearch(values, min, mid,max, value, case_flag);
       }
 
     }else if /* if the keys match */(comp == 0){
 
-      printf("FOUND: %s\n", value);
+          printf("FOUND: %s\n", value);
+
     }
 }
 
 void spellcheck(char** dictionary, char** inputDic, int inputSize, int case_flag){
 
   // Get the size of the dictionary
-  int dictionarySize = lineNumber(DicFileName);
+  int dictionarySize = lineNumber(DICTIONARY_FILE_NAME);
+
+
 
   if(case_flag){
-    printf("\n\n##############################\n# This file will ignore case #\n##############################\n\n");
+    printf("\n\n##############################\n# This search will ignore case #\n##############################\n\n");
   }
 
   for(int i = 0; i < inputSize; i++){
 
-    binarySearch(dictionary, 0, dictionarySize/2, dictionarySize, inputDic[i], case_flag);
+    if(binarySearch(dictionary, 0, dictionarySize/2, dictionarySize, inputDic[i], case_flag)){
+
+
+    }
   }
 }
 
@@ -269,9 +293,8 @@ int main(int argc, char *argv[]) {
   // inputSize is a int pointer that gets set to the numer of lines in the inputDic array
   int inputSize;
 
-
   // load the dictionary data
-  char** dictionary = fileHandlerIn(DicFileName, &inputSize);
+  char** dictionary = fileHandlerIn(DICTIONARY_FILE_NAME, &inputSize);
 
   // Handle arguments
   for(int i = 0; i < argc; i ++){
