@@ -12,7 +12,7 @@
 #include <stdbool.h>
 #include <ctype.h>
 
-
+// Function to count the number of lines in a file
 int lineNumber(char* fileName){
 
   // Open the file with the given filename
@@ -42,13 +42,13 @@ int lineNumber(char* fileName){
   // return the size of the file
   return lines;
 }
-
+// Displays the command line helper
 void CLIhelper(){
   // This func shows the help page
   printf("\nSpell Check Tool - Scott Bean\nUsage:\n\tspell [options]\nExample:\n\tspell -i input_file.txt -o output_file.txt\n\nOptions:\n\t-i <file>\t\tThe file to spell check\n\t-o <file>\t\tThe file to write misspelt words to\n\t-c\t\t\tIgnore case of words\n\n");
 
 }
-
+// Handles all files coming into the app
 char** fileHandlerIn(char* filename, int* inputSize){
 
   // open file in read mode
@@ -60,14 +60,9 @@ char** fileHandlerIn(char* filename, int* inputSize){
     // Check filename (arg + 1) contains '.txt', if so set the filename otherwise display an error
     if(strstr(filename, ".txt") != NULL){
 
-      /*
-      TODO:
-         this section only works with a word on each line,
-         need some form of ifElse block to check if sentence or not
-      */
-
       int size = lineNumber(filename);
 
+      // allows an additional value to be returned through a pointer
       *inputSize = size;
 
       // allocate a block of memory using the number of lines * the size of a char*
@@ -92,7 +87,6 @@ char** fileHandlerIn(char* filename, int* inputSize){
         if(len > 0 && wordBuff[len - 1] == '\n'){
 
           wordBuff[len - 1] = '\0';
-
         }
 
         // copy from the buffer into the dictionary
@@ -119,6 +113,7 @@ char** fileHandlerIn(char* filename, int* inputSize){
   return NULL;
 }
 
+// Handles standard input
 char** standardIN(int* inputSize){
 
   // buffer to hold the lines
@@ -180,7 +175,7 @@ char** standardIN(int* inputSize){
   return inputContent;
 
 }
-
+// Recursive binary search function
 int binarySearch(char** values, int low, int middle, int high, char* value, int case_flag){
 
   /*
@@ -193,28 +188,22 @@ int binarySearch(char** values, int low, int middle, int high, char* value, int 
     int min = low;
     int max = high;
     int mid = middle;
-
     // check if the case flag is raised
     if(case_flag){
 
       // loop through the word, convert each char to lower case
+      // Value to lower loop
       for(int i = 0; value[i]; i++){
 
         value[i] = tolower(value[i]);
 
       }
-
-      for(int j = 0; values[mid][j]; j++){
-
-        values[mid][j] = tolower(values[mid][j]);
-      }
-
-      printf("value:%s values:%s\n", value, values[mid]);
     }
 
     // set up the comparison
     int comp = strcmp(value, values[mid]);
 
+    printf("looking at: %s, looking for: %s: comp val: %d\n",values[mid], value, comp);
     // if the key is in the lower half of the array
     if(comp < 0){
 
@@ -225,7 +214,7 @@ int binarySearch(char** values, int low, int middle, int high, char* value, int 
       // if we have split the list untill the end
       if(min == mid || mid == max){
 
-          printf("%s is not in the dictionary\n", value);
+          return 1;
 
       }else{
         // continue search
@@ -242,43 +231,65 @@ int binarySearch(char** values, int low, int middle, int high, char* value, int 
       // if we have split the list untill the end
       if(min == mid || mid == max){
 
-          printf("%s is not in the dictionary\n", value);
-
+        printf("%d:%d:%d\n",min, mid, max );
+        return 1;
 
       }else{
         // continue search
         binarySearch(values, min, mid,max, value, case_flag);
       }
 
-    }else if /* if the keys match */(comp == 0){
-
-          printf("FOUND: %s\n", value);
-
+    }else if/* If the keys match */(comp == 0){
+      printf("%d:%d:%d\n",min, mid, max );
+      return comp;
     }
-}
 
+}
+// A function to cast pointer types, allows use of qsort
+int cmpstr(const void* a, const void* b){
+
+  const char** castCharA = (const char**)a;
+  const char** castCharB = (const char**)b;
+  return strcmp(*castCharA, *castCharB);
+}
+// Users binary search to compair words in the dictionary with a key
 void spellcheck(char** dictionary, char** inputDic, int inputSize, int case_flag){
 
   // Get the size of the dictionary
   int dictionarySize = lineNumber(DICTIONARY_FILE_NAME);
 
-
-
+  // If the case sensitivity flag has been raised
   if(case_flag){
-    printf("\n\n##############################\n# This search will ignore case #\n##############################\n\n");
+    printf("\n\n################################\n# This search will ignore case #\n################################\n\n");
+
+    // Loop through each word
+    for(int i = 0; i < dictionarySize; i++){
+      // Loop though each char of the word
+      for(int j = 0; dictionary[i][j]; j++){
+        // convert the char to lower case
+        dictionary[i][j] = tolower(dictionary[i][j]);
+      }
+    }
+    // sort the newly altered dictionary
+    qsort(dictionary, dictionarySize, sizeof(char*), cmpstr);
   }
 
+
+  // loop through each input word
   for(int i = 0; i < inputSize; i++){
 
-    if(binarySearch(dictionary, 0, dictionarySize/2, dictionarySize, inputDic[i], case_flag)){
-
-
+    int search = binarySearch(dictionary, 0, dictionarySize/2, dictionarySize, inputDic[i], case_flag);
+    // if the search finds the key in the dictionary
+    if(search == 0){
+      printf("Found: %s: search val: %d\n", inputDic[i], search);
+    }else{
+      printf("Couldnt find: %s\n", inputDic[i]);
     }
   }
+
 }
 
 // MAIN //
-
 int main(int argc, char *argv[]) {
 
   // case sensitivity flag
@@ -329,8 +340,8 @@ int main(int argc, char *argv[]) {
 
     if(strcmp(argv[i], "-h") == 0 ){
 
-      printf("Help arg\n");
       CLIhelper();
+      exit(0);
     }
 
     if(strcmp(argv[i], "-c") == 0){
