@@ -60,58 +60,147 @@ char** fileHandlerIn(char* filename, int* inputSize){
     // Check filename (arg + 1) contains '.txt', if so set the filename otherwise display an error
     if(strstr(filename, ".txt") != NULL){
 
-      int size = lineNumber(filename);
+      // Buffer to grab line
+      char checkLn[100];
 
-      // allows an additional value to be returned through a pointer
-      *inputSize = size;
+      // grab a line of the file
+      fgets(checkLn, 100, fp);
 
-      // allocate a block of memory using the number of lines * the size of a char*
-      char** dictionary = (char**)malloc(size * sizeof(char*));
+      // if that line contains spaces then sentence handle otherwise handle new line separated vals
+      if(strstr(checkLn, " ")){
 
-      // for each line in the file
-      for(int i = 0; i < size; i++){
+        // SENTENCES
 
-        // have a buffer to hold each word
-        char wordBuff[50];
+        int pos, counter = 0;
 
-        // allocate a block of memory within each index of the char**
-        dictionary[i] = (char*)malloc(sizeof(char));
+        char buffer[100], ch;
 
-        // get the word from the file and put it into buffer
-        fgets(wordBuff, 50, fp);
+        char* token;
 
-        // get the sting lenth
-        int len =  strlen(wordBuff);
+        char** dictionary = (char**)malloc(sizeof(char*));
 
-        // if it ends witn a new line, remove it and add null terminator
-        if(len > 0 && wordBuff[len - 1] == '\n'){
+        while(!feof(fp)){
 
-          wordBuff[len - 1] = '\0';
+          fgets(buffer, 100, fp);
+
+          int len = strlen(buffer);
+
+          for(int j = 0; j < len; j++){
+
+            // check if its not a letter
+            if(!isalpha(buffer[j])){
+              // check if its redundant punctuation
+              if(buffer[j] == ',' || buffer[j]  == '?' || buffer[j] == ' ' || buffer[j] == '\n'){
+                // replace punctuation with a space
+                buffer[j] = ' ';
+              }
+            }
+
+          }
+          for(token = strtok(buffer, " "); token != NULL; token = strtok(NULL, " ")){
+
+            int nextCap = 0;
+
+            if(strstr(token, ".")){
+              nextCap = 1;
+              token[strlen(token) - 1] = '\0';
+            }
+            if(nextCap){
+              token[0] = toupper(token[0]);
+              nextCap = 0;
+
+            }
+
+            printf("%s\n", token);
+
+            char* temp = realloc(dictionary, sizeof(char) * strlen(token));
+            // memory error checking
+            if(temp == NULL){
+
+              printf("Error allocating memory");
+              free(temp);
+              exit(1);
+            }else{
+
+              dictionary[counter] = temp;
+              strcpy(dictionary[counter], buffer);
+
+            }
+
+          }
+
         }
 
-        // copy from the buffer into the dictionary
-        strcpy(dictionary[i], wordBuff);
+        fclose(fp);
+        printf("File: %s loaded!\n", filename);
+        return dictionary;
+        // End of spaces IF
+        }else{
 
+          // if words are on new lines
+
+          printf("No spaces\n");
+
+          int size = lineNumber(filename);
+
+          // allows an additional value to be returned through a pointer
+          *inputSize = size;
+
+          // allocate a block of memory using the number of lines * the size of a char*
+          char** dictionary = (char**)malloc(size * sizeof(char*));
+
+          // for each line in the file
+          for(int i = 0; i < size; i++){
+
+            // have a buffer to hold each word
+            char wordBuff[50];
+
+            // allocate a block of memory within each index of the char**
+            dictionary[i] = (char*)malloc(sizeof(char));
+
+            // get the word from the file and put it into buffer
+            fgets(wordBuff, 50, fp);
+
+            // get the sting lenth
+            int len =  strlen(wordBuff);
+
+            // if it ends witn a new line, remove it and add null terminator
+            if(len > 0 && wordBuff[len - 1] == '\n'){
+
+              wordBuff[len - 1] = '\0';
+            }
+
+            // copy from the buffer into the dictionary
+            strcpy(dictionary[i], wordBuff);
+
+
+          }
+
+          fclose(fp);
+          printf("File: %s loaded!\n", filename);
+          return dictionary;
+        }// end of space check
+
+      }else{
+
+        printf("Invalid text file: %s\n", filename);
+        CLIhelper();
+        exit(1);
       }
-      // close the file
-      fclose(fp);
-      printf("File: %s loaded!\n", filename);
-      return dictionary;
 
+
+    }else{ /* If input_file is invalid */
+
+      printf("Invalid filename\n\n");
+      // Help page
+      CLIhelper();
+      // exit the prog
+      exit(1);
     }
 
 
-  }else{ /* If input_file is invalid */
-
-    printf("Invalid filename\n\n");
-    // Help page
-    CLIhelper();
-    // exit the prog
-    exit(1);
+    return NULL;
   }
-
-  return NULL;
-}
 
 // Handles standard input
 char** standardIN(int* inputSize){
@@ -202,23 +291,29 @@ int binarySearch(char** values, int low, int middle, int high, char* value, int 
 
     // set up the comparison
     int comp = strcmp(value, values[mid]);
+    //printf("%s - %s ? %d\n", value, values[mid], comp);
+    //printf("looking at: %s, looking for: %s: comp val: %d\n",values[mid], value, comp);
 
-    printf("looking at: %s, looking for: %s: comp val: %d\n",values[mid], value, comp);
-    // if the key is in the lower half of the array
-    if(comp < 0){
+    if/* If the keys match */(comp == 0){
+      //printf("FOUND!\n");
+      return 0;
+
+    }else if(comp < 0){
 
       // set new bounds
       max = mid;
       mid = (min + max) / 2;
 
       // if we have split the list untill the end
-      if(min == mid || mid == max){
+      if(min >= mid){
 
-          return 1;
+        //printf("\nLOWER: %d:%d:%d\n",min, mid, max );
+        return 1;
 
       }else{
         // continue search
-        binarySearch(values, min, mid,max, value, case_flag);
+        int ret = binarySearch(values, min, mid,max, value, case_flag);
+        return ret;
       }
 
 
@@ -229,22 +324,19 @@ int binarySearch(char** values, int low, int middle, int high, char* value, int 
       mid = (min + max) / 2;
 
       // if we have split the list untill the end
-      if(min == mid || mid == max){
-
-        printf("%d:%d:%d\n",min, mid, max );
+      if(min >= mid){
+        //printf("\nHIGHER: %d:%d:%d\n",min, mid, max );
         return 1;
 
       }else{
         // continue search
-        binarySearch(values, min, mid,max, value, case_flag);
+        int ret = binarySearch(values, min, mid, max, value, case_flag);
+        return ret;
       }
 
-    }else if/* If the keys match */(comp == 0){
-      printf("%d:%d:%d\n",min, mid, max );
-      return comp;
     }
+  }
 
-}
 // A function to cast pointer types, allows use of qsort
 int cmpstr(const void* a, const void* b){
 
@@ -279,14 +371,14 @@ void spellcheck(char** dictionary, char** inputDic, int inputSize, int case_flag
   for(int i = 0; i < inputSize; i++){
 
     int search = binarySearch(dictionary, 0, dictionarySize/2, dictionarySize, inputDic[i], case_flag);
+  //  printf("%d\n", search);
     // if the search finds the key in the dictionary
     if(search == 0){
-      printf("Found: %s: search val: %d\n", inputDic[i], search);
+    //  printf("Found: %s: comp val: %d\n", inputDic[i], search);
     }else{
       printf("Couldnt find: %s\n", inputDic[i]);
     }
   }
-
 }
 
 // MAIN //
@@ -355,7 +447,6 @@ int main(int argc, char *argv[]) {
     // get the size
     int size  = lineNumber(input_file);
 
-    printf("File: %s: Lines: %d\n",input_file, size);
 
   }else{
 
