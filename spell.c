@@ -63,57 +63,76 @@ char** fileHandlerIn(char* filename, int* inputSize){
       // Buffer to grab line
       char checkLn[100];
 
+      int checkLn_flag = 1;
+
       // grab a line of the file
       fgets(checkLn, 100, fp);
 
+      // rewind to the beginning of the file
+      rewind(fp);
+
       // if that line contains spaces then sentence handle otherwise handle new line separated vals
       if(strstr(checkLn, " ")){
+
 
         // SENTENCES
 
         int pos, counter = 0;
 
-        char buffer[100], ch;
+        char buffer[1000];
 
         char* token;
 
+        // allocate memory
         char** dictionary = (char**)malloc(sizeof(char*));
 
-        while(!feof(fp)){
+        // while its not the end of the file and fgets is not returning null
+        while(!feof(fp) && fgets(buffer, 1000, fp) != NULL){
 
-          fgets(buffer, 100, fp);
 
           int len = strlen(buffer);
 
+          // loop form 0 to the length of the buffer
           for(int j = 0; j < len; j++){
 
             // check if its not a letter
             if(!isalpha(buffer[j])){
               // check if its redundant punctuation
-              if(buffer[j] == ',' || buffer[j]  == '?' || buffer[j] == ' ' || buffer[j] == '\n'){
+              if(buffer[j] == ',' || buffer[j] == ' ' || buffer[j] == '\n'){
                 // replace punctuation with a space
                 buffer[j] = ' ';
               }
             }
-
           }
+
+          // for every word in buffer, splitting at the space
           for(token = strtok(buffer, " "); token != NULL; token = strtok(NULL, " ")){
 
             int nextCap = 0;
 
-            if(strstr(token, ".")){
-              nextCap = 1;
-              token[strlen(token) - 1] = '\0';
-            }
+            // shoult this be capatalised?
             if(nextCap){
+              // capatalise the first letter
               token[0] = toupper(token[0]);
+              // lower the flag
               nextCap = 0;
 
             }
+            // is there a full stop or q mark in this word?
+            if(strstr(token, ".") || strstr(token, "?")){
+              // raise the flag, the next word should be capatalised
+              nextCap = 1;
+              // replace the full stop with a null terminator
+              token[strlen(token) - 1] = '\0';
+              while(strstr(token, ".")){
+                token[strlen(token) - 1] = '\0';
+              }
+            }
 
-            printf("%s\n", token);
-
-            char* temp = realloc(dictionary, sizeof(char) * strlen(token));
+            // allocate enough memeory for the string
+            char* temp = (char*)malloc(sizeof(char) * strlen(token));
+            char** tempDic = (char**)realloc(dictionary, sizeof(char*) * counter + 1);
+            dictionary = tempDic;
             // memory error checking
             if(temp == NULL){
 
@@ -123,8 +142,8 @@ char** fileHandlerIn(char* filename, int* inputSize){
             }else{
 
               dictionary[counter] = temp;
-              strcpy(dictionary[counter], buffer);
-
+              strcpy(dictionary[counter], token);
+              counter++;
             }
 
           }
@@ -132,7 +151,8 @@ char** fileHandlerIn(char* filename, int* inputSize){
         }
 
         fclose(fp);
-        printf("File: %s loaded!\n", filename);
+        printf("File: %s loaded using Sentence handling\n\n", filename);
+        *inputSize = counter - 1;
         return dictionary;
         // End of spaces IF
         }else{
@@ -177,7 +197,7 @@ char** fileHandlerIn(char* filename, int* inputSize){
           }
 
           fclose(fp);
-          printf("File: %s loaded!\n", filename);
+          printf("File: %s loaded using line by line handling\n\n", filename);
           return dictionary;
         }// end of space check
 
@@ -201,7 +221,6 @@ char** fileHandlerIn(char* filename, int* inputSize){
 
     return NULL;
   }
-
 // Handles standard input
 char** standardIN(int* inputSize){
 
@@ -268,42 +287,54 @@ char** standardIN(int* inputSize){
 int binarySearch(char** values, int low, int middle, int high, char* value, int case_flag){
 
   /*
-    values = array of values to search from
-    n = length of values
-    value =  the value to search for
+  values = array of values to search from
+  n = length of values
+  value =  the value to search for
   */
 
-    // set bounds
-    int min = low;
-    int max = high;
-    int mid = middle;
-    // check if the case flag is raised
-    if(case_flag){
+  // set bounds
+  int min = low;
+  int max = high;
+  int mid = middle;
+  // check if the case flag is raised
+  if(case_flag){
 
-      // loop through the word, convert each char to lower case
-      // Value to lower loop
-      for(int i = 0; value[i]; i++){
+    // loop through the word, convert each char to lower case
+    // Value to lower loop
+    for(int i = 0; i < strlen(value); i++){
 
-        value[i] = tolower(value[i]);
+      value[i] = tolower(value[i]);
 
-      }
     }
+  }
+//  printf("Looking for %s\n", value);
+  // set up the comparison
+  int comp = strcmp(value, values[mid]);
 
-    // set up the comparison
-    int comp = strcmp(value, values[mid]);
-    //printf("%s - %s ? %d\n", value, values[mid], comp);
-    //printf("looking at: %s, looking for: %s: comp val: %d\n",values[mid], value, comp);
+  if(comp == 0){
+    //printf("FOUND!\n");
+    return 0;
 
-    if/* If the keys match */(comp == 0){
-      //printf("FOUND!\n");
-      return 0;
+  }else if(comp < 0){
 
-    }else if(comp < 0){
+    // set new bounds
+    max = mid;
+    mid = (min + max) / 2;
 
-      // set new bounds
-      max = mid;
-      mid = (min + max) / 2;
+    if(case_flag){
+      // if we have split the list untill the end
+      if(min > mid){
 
+        //printf("\nLOWER: %d:%d:%d\n",min, mid, max );
+        return 1;
+
+      }else{
+        // continue search
+        int ret = binarySearch(values, min, mid,max, value, case_flag);
+        return ret;
+      }
+
+    }else{
       // if we have split the list untill the end
       if(min >= mid){
 
@@ -315,28 +346,26 @@ int binarySearch(char** values, int low, int middle, int high, char* value, int 
         int ret = binarySearch(values, min, mid,max, value, case_flag);
         return ret;
       }
-
-
-    }else if/* if the key is in the higher half of the list*/(comp > 0){
-
-      // set new bounds
-      min = mid;
-      mid = (min + max) / 2;
-
-      // if we have split the list untill the end
-      if(min >= mid){
-        //printf("\nHIGHER: %d:%d:%d\n",min, mid, max );
-        return 1;
-
-      }else{
-        // continue search
-        int ret = binarySearch(values, min, mid, max, value, case_flag);
-        return ret;
-      }
-
     }
-  }
+  }else if/* if the key is in the higher half of the list*/(comp > 0){
 
+    // set new bounds
+    min = mid;
+    mid = (min + max) / 2;
+
+    // if we have split the list untill the end
+    if(min >= mid){
+      //printf("\nHIGHER: %d:%d:%d\n",min, mid, max );
+      return 1;
+
+    }else{
+      // continue search
+      int ret = binarySearch(values, min, mid, max, value, case_flag);
+      return ret;
+    }
+
+  }
+}
 // A function to cast pointer types, allows use of qsort
 int cmpstr(const void* a, const void* b){
 
@@ -350,6 +379,7 @@ void spellcheck(char** dictionary, char** inputDic, int inputSize, int case_flag
   // Get the size of the dictionary
   int dictionarySize = lineNumber(DICTIONARY_FILE_NAME);
 
+
   // If the case sensitivity flag has been raised
   if(case_flag){
     printf("\n\n################################\n# This search will ignore case #\n################################\n\n");
@@ -357,7 +387,7 @@ void spellcheck(char** dictionary, char** inputDic, int inputSize, int case_flag
     // Loop through each word
     for(int i = 0; i < dictionarySize; i++){
       // Loop though each char of the word
-      for(int j = 0; dictionary[i][j]; j++){
+      for(int j = 0; j < strlen(dictionary[i]); j++){
         // convert the char to lower case
         dictionary[i][j] = tolower(dictionary[i][j]);
       }
@@ -366,17 +396,28 @@ void spellcheck(char** dictionary, char** inputDic, int inputSize, int case_flag
     qsort(dictionary, dictionarySize, sizeof(char*), cmpstr);
   }
 
-
   // loop through each input word
   for(int i = 0; i < inputSize; i++){
 
-    int search = binarySearch(dictionary, 0, dictionarySize/2, dictionarySize, inputDic[i], case_flag);
-  //  printf("%d\n", search);
-    // if the search finds the key in the dictionary
-    if(search == 0){
-    //  printf("Found: %s: comp val: %d\n", inputDic[i], search);
-    }else{
-      printf("Couldnt find: %s\n", inputDic[i]);
+    // if the search doent find the orgininal value
+    if(binarySearch(dictionary, 0, dictionarySize/2, dictionarySize, inputDic[i], case_flag)){
+
+      // if there is more than one letter in the word
+
+      if(strlen(inputDic[i]) > 1){
+
+        if(islower(inputDic[i][1])){
+
+          inputDic[i][0] = tolower(inputDic[i][0]);
+
+
+          if(binarySearch(dictionary, 0, dictionarySize/2, dictionarySize, inputDic[i], case_flag)){
+
+            printf("Cant find: %s\n", inputDic[i]);
+          }
+
+        }
+      }
     }
   }
 }
@@ -456,7 +497,6 @@ int main(int argc, char *argv[]) {
   }
 
   spellcheck(dictionary, inputDic, inputSize, case_flag);
-
 
   return 0;
 }
