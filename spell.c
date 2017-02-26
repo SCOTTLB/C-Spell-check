@@ -74,9 +74,7 @@ char** fileHandlerIn(char* filename, int* inputSize){
       // if that line contains spaces then sentence handle otherwise handle new line separated vals
       if(strstr(checkLn, " ")){
 
-
         // SENTENCES
-
         int pos, counter = 0;
 
         char buffer[1000];
@@ -105,10 +103,10 @@ char** fileHandlerIn(char* filename, int* inputSize){
             }
           }
 
+          int nextCap = 0;
+
           // for every word in buffer, splitting at the space
           for(token = strtok(buffer, " "); token != NULL; token = strtok(NULL, " ")){
-
-            int nextCap = 0;
 
             // shoult this be capatalised?
             if(nextCap){
@@ -151,15 +149,12 @@ char** fileHandlerIn(char* filename, int* inputSize){
         }
 
         fclose(fp);
-        printf("File: %s loaded using Sentence handling\n\n", filename);
         *inputSize = counter - 1;
         return dictionary;
         // End of spaces IF
         }else{
 
           // if words are on new lines
-
-          printf("No spaces\n");
 
           int size = lineNumber(filename);
 
@@ -197,7 +192,6 @@ char** fileHandlerIn(char* filename, int* inputSize){
           }
 
           fclose(fp);
-          printf("File: %s loaded using line by line handling\n\n", filename);
           return dictionary;
         }// end of space check
 
@@ -283,6 +277,30 @@ char** standardIN(int* inputSize){
   return inputContent;
 
 }
+// Handles output
+void output(char* filename, char* word){
+
+  printf("1: %s\n", filename);
+  if(strcmp(filename, "stdout") == 0){
+    printf("2\n");
+    fprintf(stdout, "Can't find: %s\n", word);
+
+  }else{
+    printf("3\n");
+    FILE *fp = fopen(filename, "a");
+    printf("4\n");
+    if(fp == NULL){
+
+      printf("5\n");
+      printf("Cant open file\n");
+    }else{
+
+      printf("6\n");
+      fprintf(fp, "%s\n", word);
+      fclose(fp);
+    }
+  }
+}
 // Recursive binary search function
 int binarySearch(char** values, int low, int middle, int high, char* value, int case_flag){
 
@@ -307,7 +325,6 @@ int binarySearch(char** values, int low, int middle, int high, char* value, int 
 
     }
   }
-//  printf("Looking for %s\n", value);
   // set up the comparison
   int comp = strcmp(value, values[mid]);
 
@@ -365,6 +382,7 @@ int binarySearch(char** values, int low, int middle, int high, char* value, int 
     }
 
   }
+  return 1;
 }
 // A function to cast pointer types, allows use of qsort
 int cmpstr(const void* a, const void* b){
@@ -374,7 +392,7 @@ int cmpstr(const void* a, const void* b){
   return strcmp(*castCharA, *castCharB);
 }
 // Users binary search to compair words in the dictionary with a key
-void spellcheck(char** dictionary, char** inputDic, int inputSize, int case_flag){
+void spellcheck(char** dictionary, char** inputDic, int inputSize, int case_flag, int out_flag, char* output_file){
 
   // Get the size of the dictionary
   int dictionarySize = lineNumber(DICTIONARY_FILE_NAME);
@@ -394,6 +412,9 @@ void spellcheck(char** dictionary, char** inputDic, int inputSize, int case_flag
     }
     // sort the newly altered dictionary
     qsort(dictionary, dictionarySize, sizeof(char*), cmpstr);
+  }else{
+
+    printf("\n\n#############################\n# This search will not case #\n#############################\n\n");
   }
 
   // loop through each input word
@@ -413,7 +434,8 @@ void spellcheck(char** dictionary, char** inputDic, int inputSize, int case_flag
 
           if(binarySearch(dictionary, 0, dictionarySize/2, dictionarySize, inputDic[i], case_flag)){
 
-            printf("Cant find: %s\n", inputDic[i]);
+            output(output_file, inputDic[i]);
+
           }
 
         }
@@ -426,7 +448,7 @@ void spellcheck(char** dictionary, char** inputDic, int inputSize, int case_flag
 int main(int argc, char *argv[]) {
 
   // case sensitivity flag
-  int case_flag = 0;
+  int case_flag, out_flag = 0;
 
   // Hold the filename
   char* input_file = "";
@@ -459,6 +481,7 @@ int main(int argc, char *argv[]) {
 
       if (strstr(argv[i + 1], ".txt") != NULL){
 
+        out_flag = 1;
         output_file = argv[i + 1];
 
       }else{
@@ -496,7 +519,12 @@ int main(int argc, char *argv[]) {
 
   }
 
-  spellcheck(dictionary, inputDic, inputSize, case_flag);
+  if(strcmp(output_file, "") == 0){
+
+    output_file = "stdout";
+  }
+
+  spellcheck(dictionary, inputDic, inputSize, case_flag, out_flag, output_file);
 
   return 0;
 }
