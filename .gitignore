@@ -52,3 +52,7 @@ Mkfile.old
 dkms.conf
 
 \.DS_Store
+
+*.zip
+
+40274024/

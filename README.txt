@@ -41,6 +41,8 @@ Build:
 
       'make sentencecase' - builds the spell tool with the 'sentence_test.txt' input file, ignores case and output to 'sentencecase.txt'
 
+      'make clean' - removes all object files and executables
+
     Toolchain versions:
 
       GNU make - 3.81

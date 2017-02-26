@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
 #include <ctype.h>
 
 // Function to count the number of lines in a file
@@ -45,7 +44,7 @@ int lineNumber(char* fileName){
 // Displays the command line helper
 void CLIhelper(){
   // This func shows the help page
-  printf("\nSpell Check Tool - Scott Bean\nUsage:\n\tspell [options]\nExample:\n\tspell -i input_file.txt -o output_file.txt\n\nOptions:\n\t-i <file>\t\tThe file to spell check\n\t-o <file>\t\tThe file to write misspelt words to\n\t-c\t\t\tIgnore case of words\n\n");
+  printf("\nSpell Check Tool - Scott Bean\nUsage:\n\tspell [options]\nExample:\n\tspell -i input_file.txt -o output_file.txt\n\nOptions:\n\t-h\t\t\tDisplay this help page\n\t-i <file>\t\tThe file to spell check\n\t-o <file>\t\tThe file to write misspelt words to\n\t-c\t\t\tIgnore case of words\n\n");
 
 }
 // Handles all files coming into the app
@@ -155,7 +154,6 @@ char** fileHandlerIn(char* filename, int* inputSize){
         }else{
 
           // if words are on new lines
-
           int size = lineNumber(filename);
 
           // allows an additional value to be returned through a pointer
@@ -273,6 +271,7 @@ char** standardIN(int* inputSize){
 
     }
   }
+  // set the file size
   *inputSize = counter;
   return inputContent;
 
@@ -280,23 +279,23 @@ char** standardIN(int* inputSize){
 // Handles output
 void output(char* filename, char* word){
 
-  printf("1: %s\n", filename);
+  // if using stdout then we can use printf
   if(strcmp(filename, "stdout") == 0){
-    printf("2\n");
+
     fprintf(stdout, "Can't find: %s\n", word);
 
   }else{
-    printf("3\n");
+    // Open the file
     FILE *fp = fopen(filename, "a");
-    printf("4\n");
+
+    // Display an error if fp is empty
     if(fp == NULL){
 
-      printf("5\n");
-      printf("Cant open file\n");
+      printf("Cant open file: %s\n", filename);
     }else{
-
-      printf("6\n");
+      // write the word to the file
       fprintf(fp, "%s\n", word);
+      // close the file
       fclose(fp);
     }
   }
@@ -427,21 +426,42 @@ void spellcheck(char** dictionary, char** inputDic, int inputSize, int case_flag
 
       if(strlen(inputDic[i]) > 1){
 
+        //  If the second letter is lowercase
         if(islower(inputDic[i][1])){
 
+          // lower the 1st letter
           inputDic[i][0] = tolower(inputDic[i][0]);
 
-
+          // if the search cant find the newly altered value
           if(binarySearch(dictionary, 0, dictionarySize/2, dictionarySize, inputDic[i], case_flag)){
 
+            // push that word to the output func
             output(output_file, inputDic[i]);
-
           }
-
         }
       }
     }
   }
+
+  // if we are using standard out theres no need to display the file name
+  if(!(strcmp(output_file, "stdout") == 0)){
+    printf("Outputting misspelt words to: %s\n", output_file);
+  }
+
+  //Free the memory for the dictionary
+  for(int i = 0; i < dictionarySize; i++){
+    // free each index
+    free(dictionary[i]);
+  }
+  // free the char**
+  free(dictionary);
+  // free the memory for the input file
+  for(int i = 0; i < inputSize; i++){
+    // free each index
+    free(inputDic[i]);
+  }
+  // free the char**
+  free(inputDic);
 }
 
 // MAIN //
@@ -519,12 +539,15 @@ int main(int argc, char *argv[]) {
 
   }
 
+  // if theres no output file we can use standard out
   if(strcmp(output_file, "") == 0){
 
     output_file = "stdout";
   }
 
   spellcheck(dictionary, inputDic, inputSize, case_flag, out_flag, output_file);
+
+
 
   return 0;
 }
