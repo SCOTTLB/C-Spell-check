@@ -414,7 +414,7 @@ void spellcheck(char** dictionary, char** inputDic, int inputSize, int case_flag
     qsort(dictionary, dictionarySize, sizeof(char*), cmpstr);
   }else{
 
-    printf("\n\n#############################\n# This search will not case #\n#############################\n\n");
+    printf("\n\n####################################\n# This search will not ignore case #\n####################################\n\n");
   }
 
   // loop through each input word
