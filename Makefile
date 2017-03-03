@@ -15,7 +15,6 @@ build: spell.c
 	clear
 	gcc -c spell.c -o spell.o
 	gcc spell.o -o spell
-	rm *.o
 
 single: spell.c
 	clear
